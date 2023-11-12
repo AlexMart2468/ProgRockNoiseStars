@@ -12,6 +12,7 @@ import os
 from protagonista import Protagonista
 from proyectil import Proyectil
 from bloque import Bloque
+from gameover import GameOverScreen
 #---------------------------------------------// SISTEMA BASICO DEL JUEGO //---------------------------------------------------
 
 
@@ -41,16 +42,15 @@ pygame.display.set_icon(icon)
 bg_img = pygame.image.load("Door2.png")
 bg_img = pygame.transform.scale(bg_img, (width - 200, height - -100))
 screen = pygame.display.set_mode((800, 600))
-#bg_img = pygame.image.load("Status.png")
-#bg_img = pygame.transform.scale(bg_img, (200, height))
+status_img = pygame.image.load("Status.png")
+status_img = pygame.transform.scale(status_img, (200, height))
 
 # Cargar la música
-"""file = 'Menu.mp3'
+file = 'Menu.mp3'
 pygame.mixer.init()
 pygame.mixer.music.load(file)
 pygame.mixer.music.play(-1)
-file1 = '10Kaori.mp3'
-pygame.mixer.init()"""
+pygame.mixer.init()
             
 
 # Reloj del sistema y FPS
@@ -61,23 +61,16 @@ FPS = 60
 fontObj = pygame.font.Font('freesansbold.ttf', 32)
 
 #-----------------------------------------------// CLASES PARA SPRITES // ---------------------------------------------
-
-player_x = (width - 50) // 2
-player_y = height - 75
-player_speed = 50
-
-
+# En el bucle de inicialización del juego
 protagonista = Protagonista()
 proyectiles = pygame.sprite.Group()
-
-# En el bucle de inicialización del juego
 bloques = pygame.sprite.Group()
 
 # Crear bloques aleatorios
-for i in range(25):
+for i in range(30):
     x = random.randint(100, width - 200)
     y = random.randint(100, height - 100)
-    bloque = Bloque(x, y, 'Logo Game.png')
+    bloque = Bloque(x, y, 'bloque.png')
     bloques.add(bloque)
 
 
@@ -92,7 +85,7 @@ def mostrar_pausa():
     imagen_pausa = pygame.image.load("Pause.png")
     imagen_pausa = pygame.transform.scale(imagen_pausa, (width, height))
     screen.blit(imagen_pausa, (0, 0))
-    #pygame.mixer.music.pause()
+    pygame.mixer.music.pause()
     def draw_button(text, x, y, width, height, button_color, text_color):
         pygame.draw.rect(screen, button_color, (x, y, width, height))
         button_text = fontObj.render(text, True, text_color)
@@ -174,6 +167,7 @@ while running:
             protagonista.update(keys)
             # Resto de la lógica del juego
             screen.blit(bg_img, (0, 0))
+            screen.blit(status_img, (600, 0))
             screen.blit(protagonista.image, (protagonista.rect.x, protagonista.rect.y))
             
             
@@ -185,14 +179,16 @@ while running:
             # Elimina proyectiles que están fuera de la pantalla
             proyectiles = pygame.sprite.Group([proyectil for proyectil in proyectiles if proyectil.rect.bottom >= 0])
             
-            colisiones_proyectiles = pygame.sprite.groupcollide(proyectiles, bloques, True, True)
+            #colisiones_proyectiles = pygame.sprite.groupcollide(proyectiles, bloques, True, True)
             colisiones_proyectiles_bloques = pygame.sprite.groupcollide(proyectiles, bloques, True, False)
+            colisiones_protagonista_bloques_cayendo = pygame.sprite.spritecollide(protagonista, bloques, False)
 
             for proyectil, bloques_colisionados in colisiones_proyectiles_bloques.items():
                 for bloque in bloques_colisionados:
-                    # Actualiza la posición del bloque en respuesta a la colisión
-                    bloque.update()
-            
+                    # Activa la caída para el bloque
+                    bloque.cayendo = True
+
+            protagonista.deadend(bloques)
             pygame.mixer.music.unpause()
             clock.tick(FPS)
             pygame.display.flip()

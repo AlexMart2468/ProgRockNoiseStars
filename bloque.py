@@ -9,11 +9,13 @@ class Bloque(pygame.sprite.Sprite):
         self.rect.x = x - 50
         self.rect.y = y - 100
         
-        self.velocidad = 10
+        self.velocidad = 20
+        self.cayendo = False
 
     def update(self):
         # Lógica de actualización del bloque (si es necesario)
-        pass
+       #pass
     
-    def strike(self):
-        self.rect.y -= self.velocidad
+    #def strike(self):
+        if self.cayendo:
+            self.rect.y += self.velocidad

@@ -1,12 +1,14 @@
+import sys
 import pygame
 import os
 from bloque import Bloque
+from gameover import GameOverScreen
 
 from proyectil import Proyectil
 
 
 # Configuración de la pantalla
-width, height = 640, 600
+width, height = 600, 600
 
 # Obtener la ruta del directorio actual del script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +24,7 @@ class Protagonista(pygame.sprite.Sprite):
 
         frame_filename = os.path.join(frames_folder, "pixil-frame-1.png")
         self.image = pygame.image.load(frame_filename)
-        self.image = pygame.transform.scale(self.image, (115, 115))
+        self.image = pygame.transform.scale(self.image, (45, 55))
 
         self.rect = self.image.get_rect()
         self.rect.centerx = width // 2
@@ -44,23 +46,24 @@ class Protagonista(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN]:
             self.rect.y = min(height - self.rect.height, self.rect.y + self.velocidad)
 
-        """if keys[pygame.K_z]:  # Disparar solo si no hay un proyectil en vuelo
-            self.disparar()"""
-        
         if keys[pygame.K_LSHIFT]:
             self.velocidad = 1
         else:
             self.velocidad = 5
         
-        #colisiones = pygame.sprite.spritecollide(self, bloques, True)
-        
-        # Verificar colisiones entre proyectiles y bloques y destruirlos
-        
-        
-
     def disparar(self, proyectiles):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             proyectil = Proyectil(self.rect.centerx, self.rect.top)
             proyectiles.add(proyectil)
             self.last_shot = now
+    
+    def deadend(self, bloques):
+        colisiones_bloques_cayendo = pygame.sprite.spritecollide(self, bloques, False)
+        if colisiones_bloques_cayendo:
+            # Mostrar la pantalla de Game Over
+            game_over_screen = GameOverScreen()
+            game_over_screen.mostrar()
+            pygame.time.delay(3000)  # Pausa por 3 segundos
+            pygame.quit()
+            sys.exit()
