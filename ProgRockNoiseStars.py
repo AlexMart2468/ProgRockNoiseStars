@@ -8,11 +8,13 @@ import pygame
 import sys
 import math
 import os
+from lifes import Vidas
 
 from protagonista import Protagonista
 from proyectil import Proyectil
 from bloque import Bloque
 from gameover import GameOverScreen
+from successlevel import VictoriaScreen
 #---------------------------------------------// SISTEMA BASICO DEL JUEGO //---------------------------------------------------
 
 
@@ -65,6 +67,7 @@ fontObj = pygame.font.Font('freesansbold.ttf', 32)
 protagonista = Protagonista()
 proyectiles = pygame.sprite.Group()
 bloques = pygame.sprite.Group()
+victoria_screen = VictoriaScreen()
 
 # Crear bloques aleatorios
 for i in range(30):
@@ -78,6 +81,7 @@ for i in range(30):
 # Variables de juego 
 game_started = False
 pausa = False
+contador_bloques_destruidos = 0
 
 # Función para mostrar la imagen de pausa
 def mostrar_pausa():
@@ -164,31 +168,46 @@ while running:
                 quit()
             
 
-            protagonista.update(keys)
+            protagonista.update(keys, screen)
             # Resto de la lógica del juego
             screen.blit(bg_img, (0, 0))
             screen.blit(status_img, (600, 0))
             screen.blit(protagonista.image, (protagonista.rect.x, protagonista.rect.y))
             
-            
-            
             proyectiles.update()  # Actualizar el grupo de proyectiles
             proyectiles.draw(screen)  # Dibujar los proyectiles en la pantalla
+            
+            bloques = pygame.sprite.Group([bloque for bloque in bloques if not bloque.destruido])
+            
             bloques.update()
             bloques.draw(screen)
+            
+            for bloque in bloques:
+                if bloque.destruido:
+                    bloques.remove(bloque)  # Elimina el bloque de la lista
+                    contador_bloques_destruidos += 1  # Incrementa el contador global
+            
             # Elimina proyectiles que están fuera de la pantalla
             proyectiles = pygame.sprite.Group([proyectil for proyectil in proyectiles if proyectil.rect.bottom >= 0])
             
             #colisiones_proyectiles = pygame.sprite.groupcollide(proyectiles, bloques, True, True)
             colisiones_proyectiles_bloques = pygame.sprite.groupcollide(proyectiles, bloques, True, False)
-            colisiones_protagonista_bloques_cayendo = pygame.sprite.spritecollide(protagonista, bloques, False)
+            
+            #colisiones_protagonista_bloques_cayendo = pygame.sprite.spritecollide(protagonista, bloques, False)
 
             for proyectil, bloques_colisionados in colisiones_proyectiles_bloques.items():
                 for bloque in bloques_colisionados:
                     # Activa la caída para el bloque
                     bloque.cayendo = True
 
-            protagonista.deadend(bloques)
+            protagonista.deadend(bloques, screen)
+            
+            if not (bloques):
+                victoria_screen.mostrar(screen)
+                pygame.time.delay(3000)  # Pausa por 3 segundos
+                pygame.quit()
+                sys.exit()
+            
             pygame.mixer.music.unpause()
             clock.tick(FPS)
             pygame.display.flip()
