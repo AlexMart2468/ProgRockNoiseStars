@@ -12,14 +12,14 @@ class Vidas(pygame.sprite.Sprite):
         self.vida_text_rect = self.vida_text.get_rect(center=(width - 150, height - 550))
         
         self.vida_images = [pygame.image.load('corazon.png') for _ in range(self.total_vidas)]
-        self.vida_rects = [image.get_rect(topleft=(width - 180 + i * 30, 80)) for i, image in enumerate(self.vida_images)]
+        self.vida_rects = [image.get_rect(topleft=(width - 190 + i * 20, 80)) for i, image in enumerate(self.vida_images)]
 
     def perder_vida(self, screen):
         
         if self.vidas_restantes > 0:
             self.vidas_restantes -= 1
             self.vida_images.pop()
-            self.vida_rects = [image.get_rect(topleft=(width - 180 + i * 30, 80)) for i, image in enumerate(self.vida_images)]
+            self.vida_rects = [image.get_rect(topleft=(width - 190 + i * 20, 80)) for i, image in enumerate(self.vida_images)]
 
 
         

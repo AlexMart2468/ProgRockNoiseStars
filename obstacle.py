@@ -21,7 +21,7 @@ class ProyectilEnemigo(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.top = y
 
-        self.speed_y = 3
+        self.speed_y = 5
 
     def update(self):
         self.rect.y += self.speed_y

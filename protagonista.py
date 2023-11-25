@@ -33,7 +33,7 @@ class Protagonista(pygame.sprite.Sprite):
         
         self.velocidad = 5
 
-        self.vidas = Vidas(3)  # Inicializa el contador de vidas
+        self.vidas = Vidas(5)  # Inicializa el contador de vidas
 
         
         self.shoot_delay = 200  # Tiempo de espera entre disparos en milisegundos
