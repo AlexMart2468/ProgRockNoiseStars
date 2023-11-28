@@ -8,11 +8,15 @@ import pygame
 import sys
 import math
 import os
+from levels import Nivel
+from lifes import Vidas
+from obstacle import ProyectilEnemigo
 
 from protagonista import Protagonista
 from proyectil import Proyectil
 from bloque import Bloque
 from gameover import GameOverScreen
+from successlevel import VictoriaScreen
 #---------------------------------------------// SISTEMA BASICO DEL JUEGO //---------------------------------------------------
 
 
@@ -34,13 +38,16 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Progressive Gun")
 icon = pygame.image.load('Logo Game.png')
 icon = pygame.transform.scale(icon, (68, 68))
-#icon_tarea = pygame.image.load('Alt_Logo.ico')
-#icon_tarea = pygame.transform.scale(icon_tarea, (32, 32))
 pygame.display.set_icon(icon)
 
-# Cargar la imagen de fondo
-bg_img = pygame.image.load("Door2.png")
-bg_img = pygame.transform.scale(bg_img, (width - 200, height - -100))
+
+niveles = [
+    Nivel("Door2.png", 10, 5, 500, 0),
+    Nivel("Door3.png", 20, 7, 400, 3),
+    Nivel("Door4.png", 30, 8, 300, 5),
+    Nivel("Door5.png", 40, 10, 100, 10),
+    # Agrega más niveles según sea necesario
+]
 screen = pygame.display.set_mode((800, 600))
 status_img = pygame.image.load("Status.png")
 status_img = pygame.transform.scale(status_img, (200, height))
@@ -65,19 +72,15 @@ fontObj = pygame.font.Font('freesansbold.ttf', 32)
 protagonista = Protagonista()
 proyectiles = pygame.sprite.Group()
 bloques = pygame.sprite.Group()
-
-# Crear bloques aleatorios
-for i in range(30):
-    x = random.randint(100, width - 200)
-    y = random.randint(100, height - 100)
-    bloque = Bloque(x, y, 'bloque.png')
-    bloques.add(bloque)
+victoria_screen = VictoriaScreen()
+proyectiles_enemigos = pygame.sprite.Group()
 
 
 #------------------------------------------------// MENU DEL JUEGO //-----------------------------------------------------
 # Variables de juego 
 game_started = False
 pausa = False
+contador_bloques_destruidos = 0
 
 # Función para mostrar la imagen de pausa
 def mostrar_pausa():
@@ -140,6 +143,7 @@ def menu_inicio():
 
 # Llamar a la función de menú de inicio
 menu_inicio()
+nivel_actual = 0
 
 # Bucle principal del juego
 running = True
@@ -164,31 +168,80 @@ while running:
                 quit()
             
 
-            protagonista.update(keys)
+            
             # Resto de la lógica del juego
+            bloques = niveles[nivel_actual].bloques
+            enemycant = niveles[nivel_actual].enemycant
+            ratio = niveles[nivel_actual].ratio
+            velocidad_proyectiles = niveles[nivel_actual].velocidad_proyectiles
+            bg_img = pygame.image.load(niveles[nivel_actual].fondo)
+            bg_img = pygame.transform.scale(bg_img, (width - 200, height - -100))
+            
             screen.blit(bg_img, (0, 0))
             screen.blit(status_img, (600, 0))
+            
+            protagonista.update(keys, screen)
             screen.blit(protagonista.image, (protagonista.rect.x, protagonista.rect.y))
-            
-            
             
             proyectiles.update()  # Actualizar el grupo de proyectiles
             proyectiles.draw(screen)  # Dibujar los proyectiles en la pantalla
+            
+            bloques = pygame.sprite.Group([bloque for bloque in bloques if not bloque.destruido])
+            
             bloques.update()
             bloques.draw(screen)
+            
+            if random.randint(0, enemycant) < ratio:  # Ajusta el porcentaje según la frecuencia deseada
+                proyectil_enemigo = ProyectilEnemigo(random.randint(0, width - 200), 0)
+                proyectiles_enemigos.add(proyectil_enemigo)
+                
+            proyectiles_enemigos.update()
+            proyectiles_enemigos.draw(screen)
+            
+            for bloque in bloques:
+                if bloque.destruido:
+                    bloques.remove(bloque)  # Elimina el bloque de la lista
+                    contador_bloques_destruidos += 1  # Incrementa el contador global
+            
             # Elimina proyectiles que están fuera de la pantalla
             proyectiles = pygame.sprite.Group([proyectil for proyectil in proyectiles if proyectil.rect.bottom >= 0])
-            
-            #colisiones_proyectiles = pygame.sprite.groupcollide(proyectiles, bloques, True, True)
             colisiones_proyectiles_bloques = pygame.sprite.groupcollide(proyectiles, bloques, True, False)
-            colisiones_protagonista_bloques_cayendo = pygame.sprite.spritecollide(protagonista, bloques, False)
+            
 
             for proyectil, bloques_colisionados in colisiones_proyectiles_bloques.items():
                 for bloque in bloques_colisionados:
                     # Activa la caída para el bloque
                     bloque.cayendo = True
 
-            protagonista.deadend(bloques)
+            protagonista.deadend(bloques, proyectiles_enemigos, screen)
+            
+            
+            if not (bloques):
+                nivel_actual += 1  # Avanzar al siguiente nivel
+
+                # Verificar si hay más niveles o si el juego ha terminado
+                if nivel_actual < len(niveles):
+                    # Configurar el siguiente nivel
+                    bloques = niveles[nivel_actual].bloques
+                    enemycant = niveles[nivel_actual].enemycant
+                    ratio = niveles[nivel_actual].ratio
+                    velocidad_proyectiles = niveles[nivel_actual].velocidad_proyectiles
+                    bg_img = pygame.image.load(niveles[nivel_actual].fondo)
+                    bg_img = pygame.transform.scale(bg_img, (width - 200, height - -100))
+                    
+                else:
+                    # El juego ha terminado, puedes mostrar una pantalla de victoria o reiniciar niveles
+                    nivel_actual = 0
+                    victoria_screen.mostrar(screen)
+                    pygame.time.delay(1000)
+                    pygame.quit()
+                    sys.exit()
+                
+                victoria_screen.mostrar(screen)
+                pygame.time.delay(1000)  # Pausa por 3 segundos
+                #pygame.quit()
+                #sys.exit()
+            
             pygame.mixer.music.unpause()
             clock.tick(FPS)
             pygame.display.flip()

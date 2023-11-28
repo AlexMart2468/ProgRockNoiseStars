@@ -3,6 +3,7 @@ import pygame
 import os
 from bloque import Bloque
 from gameover import GameOverScreen
+from lifes import Vidas
 
 from proyectil import Proyectil
 
@@ -32,10 +33,14 @@ class Protagonista(pygame.sprite.Sprite):
         
         self.velocidad = 5
 
+        self.vidas = Vidas(5)  # Inicializa el contador de vidas
+
+        
         self.shoot_delay = 200  # Tiempo de espera entre disparos en milisegundos
         self.last_shot = pygame.time.get_ticks()
 
-    def update(self, keys):
+    def update(self, keys, screen):
+        #self.vidas.draw(screen)
 
         if keys[pygame.K_LEFT]:
             self.rect.x = max(0, self.rect.x - self.velocidad)
@@ -58,12 +63,20 @@ class Protagonista(pygame.sprite.Sprite):
             proyectiles.add(proyectil)
             self.last_shot = now
     
-    def deadend(self, bloques):
-        colisiones_bloques_cayendo = pygame.sprite.spritecollide(self, bloques, False)
-        if colisiones_bloques_cayendo:
-            # Mostrar la pantalla de Game Over
-            game_over_screen = GameOverScreen()
-            game_over_screen.mostrar()
-            pygame.time.delay(3000)  # Pausa por 3 segundos
-            pygame.quit()
-            sys.exit()
+    def deadend(self, bloques, proyectiles_enemigos, screen):
+        screen.blit(self.vidas.vida_text, self.vidas.vida_text_rect)
+        for rect, image in zip(self.vidas.vida_rects, self.vidas.vida_images):
+            screen.blit(image, rect)
+        colisiones_bloques_cayendo = pygame.sprite.spritecollide(self, bloques, True)
+        colisiones_proyectiles_enemigos_protagonista = pygame.sprite.spritecollide(self, proyectiles_enemigos, True)
+
+        if colisiones_bloques_cayendo or colisiones_proyectiles_enemigos_protagonista:
+            self.vidas.perder_vida(screen)
+            if self.vidas.vidas_restantes <= 0:
+                # Mostrar la pantalla de Game Over
+                game_over_screen = GameOverScreen()
+                game_over_screen.mostrar()
+                pygame.time.delay(3000)  # Pausa por 3 segundos
+                pygame.quit()
+                sys.exit()
+            
