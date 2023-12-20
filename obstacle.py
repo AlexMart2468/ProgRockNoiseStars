@@ -23,7 +23,25 @@ class ProyectilEnemigo(pygame.sprite.Sprite):
 
         self.speed_y = 5
 
-    def update(self):
-        self.rect.y += self.speed_y
-        if self.rect.top > height:
-            self.kill()
+    def update(self, num):
+        if num == 0 :
+            self.rect.y += self.speed_y
+            if self.rect.top > height:
+                self.kill()
+        elif num == 1:
+            self.rect.x += self.speed_y
+            if self.rect.left > width - 200:
+                self.kill()
+        elif num == 2:
+            self.rect.y += self.speed_y
+            if self.rect.top > height:
+                self.kill()
+            self.rect.x += self.speed_y
+            if self.rect.left > width - 200:
+                self.kill()
+        elif num == 3:
+            self.rect.y += self.speed_y
+            if self.rect.top > height:
+                self.kill()
+            
+   

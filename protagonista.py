@@ -76,7 +76,8 @@ class Protagonista(pygame.sprite.Sprite):
                 # Mostrar la pantalla de Game Over
                 game_over_screen = GameOverScreen()
                 game_over_screen.mostrar()
+                pygame.mixer.music.stop()
                 pygame.time.delay(3000)  # Pausa por 3 segundos
                 pygame.quit()
                 sys.exit()
-            
+         
